@@ -1,14 +1,4 @@
-/*----------------------------------------------------------------------------*/
-/*                                                                            */
-/*    Module:       main.cpp                                                  */
-/*    Author:       decla                                                     */
-/*    Created:      1/5/2026, 3:42:45 PM                                      */
-/*    Description:  V5 project                                                */
-/*                                                                            */
-/*----------------------------------------------------------------------------*/
-
 #include "vex.h"
-
 using namespace vex;
 
 // A global instance of competition
