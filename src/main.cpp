@@ -1,6 +1,6 @@
 #include "vex.h"
 using namespace vex;
-
+test 
 // A global instance of competition
 competition Competition;
 
