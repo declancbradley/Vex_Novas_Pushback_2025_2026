@@ -5,6 +5,43 @@ using namespace vex;
 competition Competition;
 
 // define your global instances of motors and other devices here
+brain Brain;
+controller Controller1 = controller(primary);
+
+// motors (ratio18_1 for standard Green cartridges)(false means spin forward, true means backward)
+motor LeftFront = motor(PORT1, ratio18_1, false);
+motor LeftMid = motor(PORT11, ratio18_1, false);
+motor LeftBack = motor(PORT2, ratio18_1, false);
+
+motor RightFront = motor(PORT3, ratio18_1, true);
+motor RightMid = motor(PORT12, ratio18_1, true);
+motor RightBack = motor(PORT10, ratio18_1, true);
+
+motor IntakeMotor = motor(PORT9, ratio18_1, false);
+motor ConveyorMotor = motor(PORT8, ratio18_1, false);
+
+// sensors
+inertial InertialSensor = inertial(PORT20);
+optical OpticalSensor = optical(PORT15);
+
+// motor groups (control entire side at once)
+motor_group LeftDrive = motor_group(LeftBack, LeftMid, LeftFront);
+motor_group RightDrive = motor_group(RightBack, RightMid, RightFront);
+
+// drivetrain, telling robot its own dimensions. (LeftGroup, RightGroup, WheelTravel, TrackWidth, 
+//     Wheelbase, units, GearRatio)
+smartdrive DDrive = smartdrive(LeftDrive, RightDrive, InertialSensor, 319.19, 295, 40, mm, 1);
+
+bool smartIntake() {
+    IntakeMotor.spin(forward, 100, percent);
+    ConveyorMotor.spin(forward, 100, percent);
+    if (OpticalSensor.isNearObject()) {
+    // Logic for when the Pushback object is grabbed
+      IntakeMotor.stop(brake);
+      return true;
+    }
+    return false;
+}
 
 /*---------------------------------------------------------------------------*/
 /*                          Pre-Autonomous Functions                         */
@@ -17,14 +54,20 @@ competition Competition;
 /*---------------------------------------------------------------------------*/
 
 void pre_auton(void) {
-
-  // All activities that occur before the competition starts
-  // Example: clearing encoders, setting servo positions, ...
+  // hold mode -- most powerful brakes to prevent moving before competition starts
+  LeftDrive.setStopping(hold);
+  RightDrive.setStopping(hold);
+  OpticalSensor.setLightPower(100, percent);
+  InertialSensor.calibrate();
+  while (InertialSensor.isCalibrating()) {
+    wait(100, msec);
+  }
+  Brain.Screen.print("Novas Ready!");
 }
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
-/*                              Autonomous Task                              */
+/*                         Autonomous Task - 15 seconds                      */
 /*                                                                           */
 /*  This task is used to control your robot during the autonomous phase of   */
 /*  a VEX Competition.                                                       */
@@ -33,14 +76,23 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  // ..........................................................................
-  // Insert autonomous user code here.
-  // ..........................................................................
+  // get ready for autonomous by exiting hold
+  LeftDrive.setStopping(brake);
+  RightDrive.setStopping(brake);
+  ConveyorMotor.setStopping(hold);
+  // set speed (avoid 100% to maintain grip)
+  DDrive.setDriveVelocity(60, percent);
+  DDrive.setTurnVelocity(40, percent);
+  
+  // AUTONOMOUS MOVEMENTS
+  DDrive.driveFor(forward, 24, inches); 
+  DDrive.turnFor(right, 90, degrees);
+  DDrive.driveFor(reverse, 12, inches);
 }
 
 /*---------------------------------------------------------------------------*/
 /*                                                                           */
-/*                              User Control Task                            */
+/*                    User Control Task - 1 min 45 seconds                   */
 /*                                                                           */
 /*  This task is used to control your robot during the user control phase of */
 /*  a VEX Competition.                                                       */
@@ -49,19 +101,66 @@ void autonomous(void) {
 /*---------------------------------------------------------------------------*/
 
 void usercontrol(void) {
+  // get ready for user control
+  DDrive.setDriveVelocity(100, percent);
+  LeftDrive.setStopping(coast);
+  RightDrive.setStopping(coast);
+  ConveyorMotor.setStopping(hold); // prevent sliding/slipping
+
   // User control code here, inside the loop
-  while (1) {
-    // This is the main execution loop for the user control program.
-    // Each time through the loop your program should update motor + servo
-    // values based on feedback from the joysticks.
+  while (true) {
+    // Drive logic
+    int forwardVal = Controller1.Axis3.position();
+    int turnVal = Controller1.Axis1.position();
 
-    // ........................................................................
-    // Insert user code here. This is where you use the joystick values to
-    // update your motors, etc.
-    // ........................................................................
+    // 5% deadzone so that joystick being close enough to center counts as 0
+    if (forwardVal < 5 && forwardVal > -5) forwardVal = 0;
+    if (turnVal < 5 && turnVal > -5) turnVal = 0;
 
-    wait(20, msec); // Sleep the task for a short amount of time to
-                    // prevent wasted resources.
+    LeftDrive.spin(vex::forward, forwardVal + turnVal, percent);
+    RightDrive.spin(vex::forward, forwardVal - turnVal, percent);
+
+    // intake and conveyor commands
+    if (Controller1.ButtonR1.pressing()) {
+      // R1: Suck in and move conveyor up
+      IntakeMotor.spin(vex::forward, 100, percent);
+      ConveyorMotor.spin(vex::forward, 100, percent);
+    } 
+    else if (Controller1.ButtonR2.pressing()) {
+      // R2: Spit out everything
+      IntakeMotor.spin(vex::reverse, 100, percent);
+      ConveyorMotor.spin(vex::reverse, 100, percent);
+    }
+    else if (Controller1.ButtonL1.pressing()) {
+      // L1: Only move conveyor up (useful for scoring)
+      ConveyorMotor.spin(vex::forward, 100, percent);
+      IntakeMotor.stop(brake);
+    }
+    else if (Controller1.ButtonL2.pressing()) {
+      // L2: Only move conveyor down
+      ConveyorMotor.spin(vex::reverse, 100, percent);
+      IntakeMotor.stop(brake);
+    }
+    else {
+      // STOP EVERYTHING
+      IntakeMotor.stop(brake);
+      ConveyorMotor.stop(hold); 
+    }
+
+    /*
+    // OPTIONAL: BRAKE TOGGLE ---
+    // Press 'Down' to be unpushable, 'Up' to coast and save battery
+    // May be too complicated for user...
+    if (Controller1.ButtonDown.pressing()) {
+        LeftDrive.setStopping(hold);
+        RightDrive.setStopping(hold);
+    } else if (Controller1.ButtonUp.pressing()) {
+        LeftDrive.setStopping(coast);
+        RightDrive.setStopping(coast);
+    }
+    */
+
+    wait(20, msec); // Sleep the task for a short amount of time to prevent wasted resource
   }
 }
 
