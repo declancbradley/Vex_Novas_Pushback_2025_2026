@@ -19,7 +19,7 @@ motor IntakeMotor = motor(PORT6, ratio18_1, false);
 motor ConveyorMotor = motor(PORT3, ratio18_1, false);
 
 inertial InertialSensor = inertial(PORT15);
-//optical OpticalSensor = optical(PORT15);
+optical OpticalSensor = optical(PORT15);
 
 // motor groups (control entire side at once)
 motor_group LeftDrive = motor_group(LeftBack, LeftFront);
