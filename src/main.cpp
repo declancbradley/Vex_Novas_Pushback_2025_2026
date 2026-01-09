@@ -9,24 +9,21 @@ brain Brain;
 controller Controller1 = controller(primary);
 
 // motors (ratio18_1 for standard Green cartridges)(false means spin forward, true means backward)
-motor LeftFront = motor(PORT1, ratio18_1, false);
-motor LeftMid = motor(PORT11, ratio18_1, false);
-motor LeftBack = motor(PORT2, ratio18_1, false);
+motor LeftFront = motor(PORT9, ratio18_1, false);
+motor LeftBack = motor(PORT1, ratio18_1, false);
 
-motor RightFront = motor(PORT3, ratio18_1, true);
-motor RightMid = motor(PORT12, ratio18_1, true);
-motor RightBack = motor(PORT10, ratio18_1, true);
+motor RightFront = motor(PORT10, ratio18_1, true);
+motor RightBack = motor(PORT2, ratio18_1, true);
 
-motor IntakeMotor = motor(PORT9, ratio18_1, false);
-motor ConveyorMotor = motor(PORT8, ratio18_1, false);
+motor IntakeMotor = motor(PORT6, ratio18_1, false);
+motor ConveyorMotor = motor(PORT3, ratio18_1, false);
 
-// sensors
-inertial InertialSensor = inertial(PORT20);
-optical OpticalSensor = optical(PORT15);
+inertial InertialSensor = inertial(PORT15);
+//optical OpticalSensor = optical(PORT15);
 
 // motor groups (control entire side at once)
-motor_group LeftDrive = motor_group(LeftBack, LeftMid, LeftFront);
-motor_group RightDrive = motor_group(RightBack, RightMid, RightFront);
+motor_group LeftDrive = motor_group(LeftBack, LeftFront);
+motor_group RightDrive = motor_group(RightBack, RightFront);
 
 // drivetrain, telling robot its own dimensions. (LeftGroup, RightGroup, WheelTravel, TrackWidth, 
 //     Wheelbase, units, GearRatio)
@@ -35,12 +32,16 @@ smartdrive DDrive = smartdrive(LeftDrive, RightDrive, InertialSensor, 319.19, 29
 bool smartIntake() {
     IntakeMotor.spin(forward, 100, percent);
     ConveyorMotor.spin(forward, 100, percent);
-    if (OpticalSensor.isNearObject()) {
+    if (OpticalSensor.isNearObject()) { //need to add Optical Sensor to the block
     // Logic for when the Pushback object is grabbed
       IntakeMotor.stop(brake);
       return true;
     }
     return false;
+}
+
+void regularIntake(){
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -86,8 +87,8 @@ void autonomous(void) {
   
   // AUTONOMOUS MOVEMENTS
   DDrive.driveFor(forward, 24, inches); 
-  DDrive.turnFor(right, 90, degrees);
-  DDrive.driveFor(reverse, 12, inches);
+  DDrive.turnFor(left, 90, degrees);
+  //DDrive.driveFor(reverse, 12, inches);
 }
 
 /*---------------------------------------------------------------------------*/
