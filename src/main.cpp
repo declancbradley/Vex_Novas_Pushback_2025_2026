@@ -91,14 +91,15 @@ void pre_auton(void) {
 /*---------------------------------------------------------------------------*/
 
 void autonomous(void) {
-  // get ready for autonomous by exiting hold
+  int driveVelocity = 100;
+  int turnVelocity = 70;
   LeftDrive.setStopping(brake);
   RightDrive.setStopping(brake);
   ConveyorMotor.setStopping(hold);
   // set speed (avoid 100% to maintain grip)
-  DDrive.setDriveVelocity(100, percent);
-  DDrive.setTurnVelocity(70, percent);
-  
+  DDrive.setDriveVelocity(driveVelocity, percent);
+  DDrive.setTurnVelocity(turnVelocity, percent);
+
   // AUTONOMOUS MOVEMENTS
   DDrive.driveFor(forward, 100, distanceUnits::cm);
 }
@@ -115,14 +116,16 @@ void autonomous(void) {
 
 void usercontrol(void) {
   // get ready for user control
-  DDrive.setDriveVelocity(100, percent);
-  DDrive.setTurnVelocity(70, percent);
-  LeftDrive.setStopping(coast);
-  RightDrive.setStopping(coast);
-  ConveyorMotor.setStopping(hold); // prevent sliding/slipping
+  int driveVelocity = 100;
+  int turnVelocity = 70;
   int deadzone = 5;
   int intakeSpeed = 90;
   int conveyorSpeed = 90;
+  DDrive.setDriveVelocity(driveVelocity, percent);
+  DDrive.setTurnVelocity(turnVelocity, percent);
+  LeftDrive.setStopping(coast);
+  RightDrive.setStopping(coast);
+  ConveyorMotor.setStopping(hold); // prevent sliding/slipping
 
   // User control code here, inside the loop
   while (true) {
@@ -155,7 +158,6 @@ void usercontrol(void) {
       IntakeMotor.spin(forward, intakeSpeed, percent);
     }
     else {
-      // STOP EVERYTHING
       IntakeMotor.stop(brake);
     }
 
