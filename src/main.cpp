@@ -100,14 +100,17 @@ void autonomous(void) {
   DDrive.setTurnVelocity(70, percent);
   
   // AUTONOMOUS MOVEMENTS
-  DDrive.driveFor(forward, 50, distanceUnits::cm); 
-  autonIntake();
-  DDrive.turnFor(right, 70, degrees);
-  DDrive.driveFor(forward, 65, distanceUnits::cm);
+  DDrive.turnFor(right, 60, degrees);
+  DDrive.driveFor(forward, 95, distanceUnits::cm);
   DDrive.turnFor(right, 90, degrees);
-  DDrive.driveFor(reverse, 21, distanceUnits::cm);
+  DDrive.driveFor(forward, 15, distanceUnits::cm);
+  autonIntake();
+  DDrive.driveFor(reverse, 65, distanceUnits::cm);
   autonDispense();
-
+  DDrive.driveFor(forward, 65, distanceUnits::cm);
+  autonIntake();
+  DDrive.driveFor(reverse, 65, distanceUnits::cm);
+  autonDispense();
 }
 
 /*---------------------------------------------------------------------------*/
