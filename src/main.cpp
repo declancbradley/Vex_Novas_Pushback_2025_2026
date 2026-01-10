@@ -43,8 +43,19 @@ bool smartIntake() {
     return false;
 } */
 
-void regularIntake(){
+void autonIntake(){
+  IntakeMotor.spin(forward, 100, percent);
+  ConveyorMotor.spin(forward, 100, percent);
+  DDrive.driveFor(forward, 10, distanceUnits::cm);
+  wait(100, msec);
+  IntakeMotor.stop();
+  ConveyorMotor.stop();
+}
 
+void autonDispense(){
+  ConveyorMotor.spin(forward, 100, percent);
+  wait(500, msec);
+  ConveyorMotor.stop();
 }
 
 /*---------------------------------------------------------------------------*/
@@ -85,13 +96,18 @@ void autonomous(void) {
   RightDrive.setStopping(brake);
   ConveyorMotor.setStopping(hold);
   // set speed (avoid 100% to maintain grip)
-  DDrive.setDriveVelocity(60, percent);
-  DDrive.setTurnVelocity(40, percent);
+  DDrive.setDriveVelocity(100, percent);
+  DDrive.setTurnVelocity(70, percent);
   
   // AUTONOMOUS MOVEMENTS
-  DDrive.driveFor(forward, 24, inches); 
-  DDrive.turnFor(left, 90, degrees);
-  //DDrive.driveFor(reverse, 12, inches);
+  DDrive.driveFor(forward, 50, distanceUnits::cm); 
+  autonIntake();
+  DDrive.turnFor(right, 70, degrees);
+  DDrive.driveFor(forward, 65, distanceUnits::cm);
+  DDrive.turnFor(right, 90, degrees);
+  DDrive.driveFor(reverse, 21, distanceUnits::cm);
+  autonDispense();
+
 }
 
 /*---------------------------------------------------------------------------*/
@@ -107,6 +123,7 @@ void autonomous(void) {
 void usercontrol(void) {
   // get ready for user control
   DDrive.setDriveVelocity(100, percent);
+  DDrive.setTurnVelocity(70, percent);
   LeftDrive.setStopping(coast);
   RightDrive.setStopping(coast);
   ConveyorMotor.setStopping(hold); // prevent sliding/slipping
