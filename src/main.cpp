@@ -19,16 +19,19 @@ motor IntakeMotor = motor(PORT6, ratio18_1, false);
 motor ConveyorMotor = motor(PORT3, ratio18_1, false);
 
 inertial InertialSensor = inertial(PORT15);
-optical OpticalSensor = optical(PORT15);
+//optical OpticalSensor = optical(PORT15);
 
 // motor groups (control entire side at once)
 motor_group LeftDrive = motor_group(LeftBack, LeftFront);
 motor_group RightDrive = motor_group(RightBack, RightFront);
 
+bumper Bumper = bumper(Brain.ThreeWirePort.A);
+
 // drivetrain, telling robot its own dimensions. (LeftGroup, RightGroup, WheelTravel, TrackWidth, 
 //     Wheelbase, units, GearRatio)
 smartdrive DDrive = smartdrive(LeftDrive, RightDrive, InertialSensor, 319.19, 295, 40, mm, 1);
 
+/*
 bool smartIntake() {
     IntakeMotor.spin(forward, 100, percent);
     ConveyorMotor.spin(forward, 100, percent);
@@ -38,7 +41,7 @@ bool smartIntake() {
       return true;
     }
     return false;
-}
+} */
 
 void regularIntake(){
 
@@ -58,7 +61,7 @@ void pre_auton(void) {
   // hold mode -- most powerful brakes to prevent moving before competition starts
   LeftDrive.setStopping(hold);
   RightDrive.setStopping(hold);
-  OpticalSensor.setLightPower(100, percent);
+  //OpticalSensor.setLightPower(100, percent);
   InertialSensor.calibrate();
   while (InertialSensor.isCalibrating()) {
     wait(100, msec);
@@ -107,6 +110,9 @@ void usercontrol(void) {
   LeftDrive.setStopping(coast);
   RightDrive.setStopping(coast);
   ConveyorMotor.setStopping(hold); // prevent sliding/slipping
+  int deadzone = 5;
+  int intakeSpeed = 90;
+  int conveyorSpeed = 90;
 
   // User control code here, inside the loop
   while (true) {
@@ -115,32 +121,27 @@ void usercontrol(void) {
     int turnVal = Controller1.Axis1.position();
 
     // 5% deadzone so that joystick being close enough to center counts as 0
-    if (forwardVal < 5 && forwardVal > -5) forwardVal = 0;
-    if (turnVal < 5 && turnVal > -5) turnVal = 0;
+    if (forwardVal < deadzone && forwardVal > -deadzone) forwardVal = 0;
+    if (turnVal < deadzone && turnVal > -deadzone) turnVal = 0;
 
-    LeftDrive.spin(vex::forward, forwardVal + turnVal, percent);
-    RightDrive.spin(vex::forward, forwardVal - turnVal, percent);
+    LeftDrive.spin(forward, forwardVal + turnVal, percent);
+    RightDrive.spin(forward, forwardVal - turnVal, percent);
 
     // intake and conveyor commands
     if (Controller1.ButtonR1.pressing()) {
-      // R1: Suck in and move conveyor up
-      IntakeMotor.spin(vex::forward, 100, percent);
-      ConveyorMotor.spin(vex::forward, 100, percent);
+      ConveyorMotor.spin(forward, conveyorSpeed, percent);
+      IntakeMotor.stop(brake);
     } 
     else if (Controller1.ButtonR2.pressing()) {
-      // R2: Spit out everything
-      IntakeMotor.spin(vex::reverse, 100, percent);
-      ConveyorMotor.spin(vex::reverse, 100, percent);
+      ConveyorMotor.spin(reverse, conveyorSpeed, percent);
     }
     else if (Controller1.ButtonL1.pressing()) {
-      // L1: Only move conveyor up (useful for scoring)
-      ConveyorMotor.spin(vex::forward, 100, percent);
-      IntakeMotor.stop(brake);
+      IntakeMotor.spin(forward, intakeSpeed, percent);
+      ConveyorMotor.stop(brake);
     }
     else if (Controller1.ButtonL2.pressing()) {
-      // L2: Only move conveyor down
-      ConveyorMotor.spin(vex::reverse, 100, percent);
-      IntakeMotor.stop(brake);
+      IntakeMotor.spin(reverse, intakeSpeed, percent);
+      ConveyorMotor.stop(brake);
     }
     else {
       // STOP EVERYTHING
