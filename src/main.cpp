@@ -136,11 +136,11 @@ void usercontrol(void) {
       ConveyorMotor.spin(reverse, conveyorSpeed, percent);
     }
     else if (Controller1.ButtonL1.pressing()) {
-      IntakeMotor.spin(forward, intakeSpeed, percent);
+      IntakeMotor.spin(reverse, intakeSpeed, percent);
       ConveyorMotor.stop(brake);
     }
     else if (Controller1.ButtonL2.pressing()) {
-      IntakeMotor.spin(reverse, intakeSpeed, percent);
+      IntakeMotor.spin(forward, intakeSpeed, percent);
       ConveyorMotor.stop(brake);
     }
     else {
